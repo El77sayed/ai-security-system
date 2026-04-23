@@ -21,26 +21,25 @@ header {
     padding: 15px;
     font-size: 22px;
     color: #00ffcc;
-    border-bottom: 2px solid #00ffcc;
-}
-
-.container {
-    position: relative;
-    display: inline-block;
-    margin-top: 20px;
 }
 
 video {
     width: 90%;
     max-width: 420px;
+    margin-top: 20px;
     border-radius: 15px;
     border: 3px solid #00ffcc;
 }
 
 canvas {
     position: absolute;
-    top: 0;
     left: 0;
+    top: 0;
+}
+
+.container {
+    position: relative;
+    display: inline-block;
 }
 
 .status {
@@ -51,14 +50,26 @@ canvas {
 .alert {
     margin-top: 15px;
     font-size: 22px;
-    font-weight: bold;
     color: red;
+    font-weight: bold;
     animation: blink 0.5s infinite alternate;
 }
 
 @keyframes blink {
     from {opacity: 1;}
     to {opacity: 0.3;}
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.soundBtn {
+    background: #ffcc00;
 }
 </style>
 </head>
@@ -73,6 +84,9 @@ canvas {
 </div>
 
 <div class="status" id="status">Loading AI...</div>
+
+<button class="soundBtn" onclick="enableSound()">🔊 Enable Sound</button>
+
 <div class="alert" id="alert"></div>
 
 <audio id="alarm">
@@ -85,6 +99,12 @@ let video = document.getElementById("camera");
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 let alarm = document.getElementById("alarm");
+let soundEnabled = false;
+
+function enableSound() {
+    soundEnabled = true;
+    alert("🔊 Sound Enabled");
+}
 
 async function startCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -112,23 +132,17 @@ async function detect() {
 
     let personDetected = false;
 
-    predictions.forEach(pred => {
-        if (pred.score > 0.6) {
+    predictions.forEach(p => {
+        if (p.score > 0.6) {
 
-            // رسم مربع
             ctx.strokeStyle = "#00ffcc";
             ctx.lineWidth = 2;
-            ctx.strokeRect(...pred.bbox);
+            ctx.strokeRect(...p.bbox);
 
-            // اسم الكائن
             ctx.fillStyle = "#00ffcc";
-            ctx.fillText(
-                pred.class + " " + Math.round(pred.score * 100) + "%",
-                pred.bbox[0],
-                pred.bbox[1] > 10 ? pred.bbox[1] - 5 : 10
-            );
+            ctx.fillText(p.class, p.bbox[0], p.bbox[1]);
 
-            if (pred.class === "person") {
+            if (p.class === "person") {
                 personDetected = true;
             }
         }
@@ -136,10 +150,11 @@ async function detect() {
 
     if (personDetected) {
         document.getElementById("alert").innerText = "🚨 INTRUDER DETECTED!";
-        
-        try {
+
+        if (soundEnabled) {
             alarm.play();
-        } catch (e) {}
+        }
+
     } else {
         document.getElementById("alert").innerText = "";
     }
