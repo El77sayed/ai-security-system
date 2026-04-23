@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>AI Security System</title>
+<title>Security System</title>
 
 <style>
 body {
@@ -12,8 +12,8 @@ body {
     font-family: Arial;
 }
 
-video, canvas {
-    border: 2px solid red;
+video {
+    border: 2px solid green;
     margin-top: 10px;
 }
 
@@ -21,96 +21,27 @@ button {
     padding: 10px 20px;
     font-size: 18px;
     margin-top: 15px;
-    cursor: pointer;
 }
 </style>
 </head>
 
 <body>
 
-<h1>نظام أمني بالذكاء الاصطناعي</h1>
+<h1>نظام مراقبة بسيط</h1>
 
-<button id="startBtn">تشغيل الكاميرا</button>
+<button id="start">تشغيل الكاميرا</button>
 
 <br>
 
 <video id="video" width="300" height="200" autoplay></video>
-<canvas id="canvas" width="300" height="200"></canvas>
-
-<!-- 🔊 صوت الإنذار -->
-<audio id="alarmSound" src="alarm.mp3" preload="auto"></audio>
 
 <script>
 let video = document.getElementById("video");
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
-let alarm = document.getElementById("alarmSound");
 
-let previousFrame = null;
-let audioUnlocked = false;
-
-// تشغيل الكاميرا
-document.getElementById("startBtn").onclick = async () => {
+document.getElementById("start").onclick = async () => {
     let stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
-
-    startDetection();
 };
-
-// 🔊 تفعيل الصوت أول تفاعل
-document.body.addEventListener("click", async () => {
-    if (!audioUnlocked) {
-        try {
-            await alarm.play();
-            alarm.pause();
-            alarm.currentTime = 0;
-            audioUnlocked = true;
-            console.log("🔊 الصوت اتفعل");
-        } catch (e) {
-            console.log("مش قادر يفعل الصوت");
-        }
-    }
-}, { once: true });
-
-// كشف الحركة
-function startDetection() {
-    setInterval(() => {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        let currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-        if (previousFrame) {
-            let diff = 0;
-
-            for (let i = 0; i < currentFrame.data.length; i += 4) {
-                let r = Math.abs(currentFrame.data[i] - previousFrame.data[i]);
-                let g = Math.abs(currentFrame.data[i+1] - previousFrame.data[i+1]);
-                let b = Math.abs(currentFrame.data[i+2] - previousFrame.data[i+2]);
-
-                if (r + g + b > 50) {
-                    diff++;
-                }
-            }
-
-            // لو في حركة
-            if (diff > 5000) {
-                playAlarm();
-                console.log("🚨 حركة تم اكتشافها");
-            }
-        }
-
-        previousFrame = currentFrame;
-    }, 200);
-}
-
-// 🔊 تشغيل الإنذار
-function playAlarm() {
-    if (!audioUnlocked) return;
-
-    alarm.currentTime = 0;
-    alarm.play().catch(err => {
-        console.log("الصوت متمنع من المتصفح");
-    });
-}
 </script>
 
 </body>
