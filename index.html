@@ -106,19 +106,27 @@ let status = document.getElementById('status');
 
 let model;
 
-let alarm = new Audio("alarm.mp3");
-alarm.loop = true;
-let isPlaying = false;
-let audioUnlocked = false;
+// Web Audio API (بديل الصوت)
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let alarmActive = false;
 
-// unlock audio (fix mobile + chrome)
-document.addEventListener("click", () => {
-    alarm.play().then(()=>{
-        alarm.pause();
-        alarm.currentTime = 0;
-        audioUnlocked = true;
-    }).catch(()=>{});
-}, { once:true });
+function playBeep(){
+    let osc = audioCtx.createOscillator();
+    let gain = audioCtx.createGain();
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.type = "square";
+    osc.frequency.value = 900;
+    gain.gain.value = 0.1;
+
+    osc.start();
+
+    setTimeout(()=>{
+        osc.stop();
+    }, 200);
+}
 
 Notification.requestPermission();
 
@@ -139,21 +147,6 @@ async function startSystem(){
             detect();
         };
     });
-}
-
-function handleAlarm(personFound){
-    if(personFound){
-        if(!isPlaying && audioUnlocked){
-            alarm.play().catch(()=>{});
-            isPlaying = true;
-        }
-    }else{
-        if(isPlaying){
-            alarm.pause();
-            alarm.currentTime = 0;
-            isPlaying = false;
-        }
-    }
 }
 
 async function detect(){
@@ -178,17 +171,18 @@ async function detect(){
             }
         });
 
-        handleAlarm(personFound);
-
         if(personFound){
             status.innerText = "SYSTEM STATUS: INTRUDER DETECTED";
             status.className = "status danger";
 
+            playBeep();
+
             if(Notification.permission === "granted"){
-                new Notification("⚠️ Intruder Detected", {
+                new Notification("⚠️ INTRUDER DETECTED", {
                     body: "AI detected a person in restricted area"
                 });
             }
+
         }else{
             status.innerText = "SYSTEM STATUS: SAFE";
             status.className = "status safe";
