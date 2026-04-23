@@ -1,61 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>AI Security System</title>
-<style>
-body {
-    margin: 0;
-    font-family: Arial;
-    background: #0f0f0f;
-    color: #00ff88;
-    text-align: center;
-}
-
-.header {
-    padding: 20px;
-    font-size: 28px;
-    background: #111;
-    border-bottom: 2px solid #00ff88;
-}
-
-.status {
-    margin-top: 40px;
-    font-size: 22px;
-}
-
-.box {
-    margin: 40px auto;
-    padding: 20px;
-    width: 300px;
-    border: 1px solid #00ff88;
-    border-radius: 10px;
-}
-
-button {
-    padding: 10px 20px;
-    background: #00ff88;
-    border: none;
-    cursor: pointer;
-    margin-top: 20px;
-    font-weight: bold;
-}
-
-button:hover {
-    background: #00cc66;
-}
-</style>
+    <title>AI Security System</title>
 </head>
 <body>
 
-<div class="header">🔐 AI Security System</div>
+<h2>AI Security Camera</h2>
 
-<div class="status">System Status: <b>Active</b></div>
+<video id="camera" autoplay playsinline width="300"></video>
 
-<div class="box">
-    <p>Live Monitoring Panel</p>
-    <button onclick="alert('Camera Activated (Simulation)')">Start Camera</button>
-</div>
+<script>
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(function(stream) {
+    document.getElementById("camera").srcObject = stream;
+})
+.catch(function(error) {
+    alert("الكاميرا مش شغالة: " + error);
+});
+</script>
 
 </body>
 </html>
