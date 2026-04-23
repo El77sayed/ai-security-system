@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AI Security System</title>
+<title>AI Security System Pro</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
@@ -24,12 +24,23 @@ header {
     border-bottom: 2px solid #00ffcc;
 }
 
+.container {
+    position: relative;
+    display: inline-block;
+    margin-top: 20px;
+}
+
 video {
     width: 90%;
-    max-width: 400px;
-    margin-top: 20px;
+    max-width: 420px;
     border-radius: 15px;
     border: 3px solid #00ffcc;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .status {
@@ -39,21 +50,29 @@ video {
 
 .alert {
     margin-top: 15px;
-    color: red;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
+    color: red;
+    animation: blink 0.5s infinite alternate;
+}
+
+@keyframes blink {
+    from {opacity: 1;}
+    to {opacity: 0.3;}
 }
 </style>
 </head>
 
 <body>
 
-<header>🚨 AI Security System</header>
+<header>🚨 AI SECURITY SYSTEM PRO</header>
 
-<video id="camera" autoplay playsinline></video>
+<div class="container">
+    <video id="camera" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+</div>
 
 <div class="status" id="status">Loading AI...</div>
-
 <div class="alert" id="alert"></div>
 
 <audio id="alarm">
@@ -63,39 +82,69 @@ video {
 <script>
 let model;
 let video = document.getElementById("camera");
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+let alarm = document.getElementById("alarm");
 
 async function startCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
+
+    return new Promise(resolve => {
+        video.onloadedmetadata = () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            resolve();
+        };
+    });
 }
 
-// تحميل AI model
 async function loadAI() {
     model = await cocoSsd.load();
     document.getElementById("status").innerText = "AI Active - Monitoring...";
-    detectFrame();
+    detect();
 }
 
-// كشف مستمر
-async function detectFrame() {
+async function detect() {
     const predictions = await model.detect(video);
 
-    let foundPerson = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let personDetected = false;
 
     predictions.forEach(pred => {
-        if (pred.class === "person" && pred.score > 0.6) {
-            foundPerson = true;
+        if (pred.score > 0.6) {
+
+            // رسم مربع
+            ctx.strokeStyle = "#00ffcc";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(...pred.bbox);
+
+            // اسم الكائن
+            ctx.fillStyle = "#00ffcc";
+            ctx.fillText(
+                pred.class + " " + Math.round(pred.score * 100) + "%",
+                pred.bbox[0],
+                pred.bbox[1] > 10 ? pred.bbox[1] - 5 : 10
+            );
+
+            if (pred.class === "person") {
+                personDetected = true;
+            }
         }
     });
 
-    if (foundPerson) {
-        document.getElementById("alert").innerText = "🚨 Person Detected!";
-        document.getElementById("alarm").play();
+    if (personDetected) {
+        document.getElementById("alert").innerText = "🚨 INTRUDER DETECTED!";
+        
+        try {
+            alarm.play();
+        } catch (e) {}
     } else {
         document.getElementById("alert").innerText = "";
     }
 
-    requestAnimationFrame(detectFrame);
+    requestAnimationFrame(detect);
 }
 
 async function startSystem() {
