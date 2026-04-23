@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>AI Security System</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #020617;
+    color: white;
+    text-align: center;
+}
+
+header {
+    background: #0f172a;
+    padding: 15px;
+    font-size: 22px;
+}
+
+.container {
+    margin-top: 20px;
+}
+
+video {
+    border-radius: 15px;
+    border: 3px solid #3b82f6;
+}
+
+button {
+    padding: 12px 20px;
+    margin: 10px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.start { background: #22c55e; }
+.scan { background: #3b82f6; }
+.alert { background: #ef4444; }
+
+#result {
+    margin-top: 15px;
+    font-size: 20px;
+}
+
+#log {
+    margin-top: 20px;
+    max-height: 150px;
+    overflow-y: auto;
+    background: #111827;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.log-item {
+    font-size: 14px;
+    border-bottom: 1px solid #374151;
+    padding: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>🔐 AI Security System</header>
+
+<div class="container">
+
+<video id="camera" width="300" autoplay></video>
+
+<br>
+
+<button class="start" onclick="startCamera()">تشغيل الكاميرا</button>
+<button class="scan" onclick="scan()">فحص بالذكاء الاصطناعي</button>
+
+<div id="result"></div>
+
+<div id="log"></div>
+
+<audio id="alarm" src="https://www.soundjay.com/button/beep-01a.mp3"></audio>
+
+</div>
+
+<script>
+function startCamera() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+        document.getElementById('camera').srcObject = stream;
+        addLog("📷 تم تشغيل الكاميرا");
+    });
+}
+
+function scan() {
+    document.getElementById('result').innerHTML = "⏳ جاري التحليل...";
+    
+    setTimeout(() => {
+        let random = Math.random();
+
+        if (random > 0.5) {
+            document.getElementById('result').innerHTML = "✅ تم التعرف على شخص مصرح";
+            document.getElementById('result').style.color = "lightgreen";
+            addLog("✔️ شخص معروف دخل النظام");
+        } else {
+            document.getElementById('result').innerHTML = "🚨 خطر: شخص غير معروف!";
+            document.getElementById('result').style.color = "red";
+            document.getElementById('alarm').play();
+            addLog("❌ محاولة دخول غير مصرح بها");
+        }
+    }, 2000);
+}
+
+function addLog(text) {
+    let log = document.getElementById("log");
+    let item = document.createElement("div");
+    item.className = "log-item";
+    item.innerText = new Date().toLocaleTimeString() + " - " + text;
+    log.prepend(item);
+}
+</script>
+
+</body>
+</html>
