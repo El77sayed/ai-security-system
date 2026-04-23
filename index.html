@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>AI Security System</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
 <style>
 body {
     margin: 0;
@@ -17,41 +20,27 @@ header {
     background: #111827;
     padding: 15px;
     font-size: 22px;
-    font-weight: bold;
+    color: #00ffcc;
     border-bottom: 2px solid #00ffcc;
-}
-
-.container {
-    margin-top: 30px;
 }
 
 video {
     width: 90%;
     max-width: 400px;
+    margin-top: 20px;
     border-radius: 15px;
     border: 3px solid #00ffcc;
-    box-shadow: 0 0 20px #00ffcc;
 }
 
 .status {
-    margin-top: 15px;
-    font-size: 18px;
+    margin-top: 10px;
     color: #00ffcc;
-}
-
-button {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background: #00ffcc;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    cursor: pointer;
 }
 
 .alert {
     margin-top: 15px;
     color: red;
+    font-size: 20px;
     font-weight: bold;
 }
 </style>
@@ -61,32 +50,60 @@ button {
 
 <header>🚨 AI Security System</header>
 
-<div class="container">
-    <video id="camera" autoplay playsinline></video>
+<video id="camera" autoplay playsinline></video>
 
-    <div class="status" id="status">System Ready</div>
+<div class="status" id="status">Loading AI...</div>
 
-    <button onclick="startCamera()">Start Camera</button>
+<div class="alert" id="alert"></div>
 
-    <div class="alert" id="alert"></div>
-</div>
+<audio id="alarm">
+    <source src="https://www.soundjay.com/buttons/sounds/beep-07.mp3">
+</audio>
 
 <script>
-async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        document.getElementById("camera").srcObject = stream;
-        document.getElementById("status").innerText = "Monitoring...";
-        
-        // fake AI alert after 5 seconds (علشان الشكل بس)
-        setTimeout(() => {
-            document.getElementById("alert").innerText = "🚨 Motion Detected!";
-        }, 5000);
+let model;
+let video = document.getElementById("camera");
 
-    } catch (err) {
-        alert("❌ الكاميرا مش شغالة: " + err);
-    }
+async function startCamera() {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
 }
+
+// تحميل AI model
+async function loadAI() {
+    model = await cocoSsd.load();
+    document.getElementById("status").innerText = "AI Active - Monitoring...";
+    detectFrame();
+}
+
+// كشف مستمر
+async function detectFrame() {
+    const predictions = await model.detect(video);
+
+    let foundPerson = false;
+
+    predictions.forEach(pred => {
+        if (pred.class === "person" && pred.score > 0.6) {
+            foundPerson = true;
+        }
+    });
+
+    if (foundPerson) {
+        document.getElementById("alert").innerText = "🚨 Person Detected!";
+        document.getElementById("alarm").play();
+    } else {
+        document.getElementById("alert").innerText = "";
+    }
+
+    requestAnimationFrame(detectFrame);
+}
+
+async function startSystem() {
+    await startCamera();
+    await loadAI();
+}
+
+startSystem();
 </script>
 
 </body>
