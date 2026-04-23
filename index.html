@@ -1,22 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Security System</title>
+<meta charset="UTF-8">
+<title>AI Security System</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0b0f1a;
+    color: white;
+    text-align: center;
+}
+
+header {
+    background: #111827;
+    padding: 15px;
+    font-size: 22px;
+    font-weight: bold;
+    border-bottom: 2px solid #00ffcc;
+}
+
+.container {
+    margin-top: 30px;
+}
+
+video {
+    width: 90%;
+    max-width: 400px;
+    border-radius: 15px;
+    border: 3px solid #00ffcc;
+    box-shadow: 0 0 20px #00ffcc;
+}
+
+.status {
+    margin-top: 15px;
+    font-size: 18px;
+    color: #00ffcc;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #00ffcc;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.alert {
+    margin-top: 15px;
+    color: red;
+    font-weight: bold;
+}
+</style>
 </head>
+
 <body>
 
-<h2>AI Security Camera</h2>
+<header>🚨 AI Security System</header>
 
-<video id="camera" autoplay playsinline width="300"></video>
+<div class="container">
+    <video id="camera" autoplay playsinline></video>
+
+    <div class="status" id="status">System Ready</div>
+
+    <button onclick="startCamera()">Start Camera</button>
+
+    <div class="alert" id="alert"></div>
+</div>
 
 <script>
-navigator.mediaDevices.getUserMedia({ video: true })
-.then(function(stream) {
-    document.getElementById("camera").srcObject = stream;
-})
-.catch(function(error) {
-    alert("الكاميرا مش شغالة: " + error);
-});
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        document.getElementById("camera").srcObject = stream;
+        document.getElementById("status").innerText = "Monitoring...";
+        
+        // fake AI alert after 5 seconds (علشان الشكل بس)
+        setTimeout(() => {
+            document.getElementById("alert").innerText = "🚨 Motion Detected!";
+        }, 5000);
+
+    } catch (err) {
+        alert("❌ الكاميرا مش شغالة: " + err);
+    }
+}
 </script>
 
 </body>
