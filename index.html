@@ -1,36 +1,45 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>AI Security Pro</title>
+<title>Smart AI Security</title>
 
 <style>
 body {
     margin: 0;
-    background: #0a0a0a;
-    color: white;
+    background: radial-gradient(#111, #000);
     font-family: Arial;
+    color: white;
     text-align: center;
 }
 
 .header {
     padding: 15px;
-    background: #111;
     font-size: 22px;
+    background: #0c0c0c;
+    color: #00ff99;
     font-weight: bold;
-    color: #00ff88;
+}
+
+button {
+    padding: 10px 25px;
+    font-size: 16px;
+    background: #00ff99;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
 }
 
 .container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
     position: relative;
+    display: inline-block;
+    margin-top: 20px;
 }
 
 video, canvas {
-    border: 2px solid #00ff88;
-    border-radius: 10px;
+    border-radius: 12px;
+    border: 2px solid #00ff99;
 }
 
 canvas {
@@ -39,79 +48,141 @@ canvas {
     left: 0;
 }
 
-button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    font-size: 16px;
-    background: #00ff88;
-    border: none;
-    cursor: pointer;
+/* إشعار */
+#notif {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ff0033;
+    padding: 12px 18px;
     border-radius: 8px;
+    display: none;
+    font-weight: bold;
+    box-shadow: 0 0 15px #ff0033;
+}
+
+/* سجل الأحداث */
+#log {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #aaa;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🛡 AI Security System Pro</div>
+<div class="header">🧠 SMART AI SECURITY SYSTEM</div>
 
-<button id="startBtn">تشغيل الكاميرا</button>
+<button id="startBtn">▶ تشغيل النظام</button>
 
 <div class="container">
-    <video id="video" width="400" height="300" autoplay></video>
-    <canvas id="canvas" width="400" height="300"></canvas>
+    <video id="video" width="450" height="320" autoplay></video>
+    <canvas id="canvas" width="450" height="320"></canvas>
 </div>
+
+<div id="notif">🚨 Intruder Detected</div>
+
+<div id="log">📊 System ready...</div>
+
+<audio id="alarmSound" src="alarm.mp3" preload="auto"></audio>
 
 <script>
 let video = document.getElementById("video");
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
+let alarm = document.getElementById("alarmSound");
+let notif = document.getElementById("notif");
+let log = document.getElementById("log");
 
-let prevFrame = null;
+let prev = null;
+let unlocked = false;
+let lastAlertTime = 0;
 
 // تشغيل الكاميرا
 document.getElementById("startBtn").onclick = async () => {
     let stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
-    detectMotion();
+    detect();
 };
 
-// كشف الحركة + رسم بوكس
-function detectMotion() {
+// تفعيل الصوت
+document.body.addEventListener("click", async () => {
+    if (!unlocked) {
+        try {
+            await alarm.play();
+            alarm.pause();
+            alarm.currentTime = 0;
+            unlocked = true;
+        } catch {}
+    }
+}, { once: true });
+
+// الذكاء: كشف حركة ذكي
+function detect() {
     setInterval(() => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
         let frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-        if (prevFrame) {
-            let diff = 0;
+        if (prev) {
+
+            let totalDiff = 0;
+            let motionPixels = 0;
 
             for (let i = 0; i < frame.data.length; i += 4) {
-                let r = Math.abs(frame.data[i] - prevFrame.data[i]);
-                let g = Math.abs(frame.data[i+1] - prevFrame.data[i+1]);
-                let b = Math.abs(frame.data[i+2] - prevFrame.data[i+2]);
+                let r = Math.abs(frame.data[i] - prev.data[i]);
+                let g = Math.abs(frame.data[i+1] - prev.data[i+1]);
+                let b = Math.abs(frame.data[i+2] - prev.data[i+2]);
 
-                if (r + g + b > 60) diff++;
+                let diff = r + g + b;
+
+                if (diff > 80) {
+                    motionPixels++;
+                    totalDiff += diff;
+                }
             }
 
-            if (diff > 5000) {
+            let now = Date.now();
+
+            // 🧠 ذكاء: لازم حركة كبيرة + cooldown
+            if (motionPixels > 6000 && (now - lastAlertTime > 3000)) {
+
+                lastAlertTime = now;
+
+                showAlert();
                 drawBox();
+                playAlarm();
+
+                log.innerHTML = "📊 Motion detected at " + new Date().toLocaleTimeString();
             }
         }
 
-        prevFrame = frame;
+        prev = frame;
     }, 200);
 }
 
-// رسم بوكس احترافي
+// 🔴 بوكس ذكي
 function drawBox() {
     ctx.strokeStyle = "#ff0000";
     ctx.lineWidth = 3;
-    ctx.strokeRect(50, 50, 300, 200);
+    ctx.strokeRect(70, 50, 310, 220);
 
-    ctx.fillStyle = "red";
-    ctx.font = "18px Arial";
-    ctx.fillText("⚠ Motion Detected", 60, 40);
+    ctx.fillStyle = "#ff0000";
+    ctx.font = "16px Arial";
+    ctx.fillText("⚠ HUMAN / MOTION DETECTED", 80, 40);
+}
+
+// 🔊 إنذار
+function playAlarm() {
+    if (!unlocked) return;
+    alarm.currentTime = 0;
+    alarm.play().catch(() => {});
+}
+
+// 🚨 إشعار
+function showAlert() {
+    notif.style.display = "block";
+    setTimeout(() => notif.style.display = "none", 2000);
 }
 </script>
 
