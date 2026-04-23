@@ -114,10 +114,12 @@ let status = document.getElementById('status');
 let alarm = new Audio('alarm.mp3');
 alarm.loop = true;
 let isPlaying = false;
-
 let lastFrame = null;
 
 function startCamera(){
+    // طلب إذن الإشعارات
+    Notification.requestPermission();
+
     navigator.mediaDevices.getUserMedia({ video:true })
     .then(stream => {
         video.srcObject = stream;
@@ -151,7 +153,6 @@ function detectMotion(){
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-            // draw boxes where motion exists
             if(motionBlocks > 20){
                 ctx.strokeStyle = "red";
                 ctx.lineWidth = 3;
@@ -175,6 +176,15 @@ function triggerAlarm(motion){
             alarm.play();
             isPlaying = true;
         }
+
+        // 📱 إشعار الموبايل
+        if(Notification.permission === "granted"){
+            new Notification("⚠️ Intruder Detected!", {
+                body: "AI Security System detected movement",
+                icon: "https://cdn-icons-png.flaticon.com/512/565/565547.png"
+            });
+        }
+
     }else{
         status.innerText = "SYSTEM STATUS: SAFE";
         status.className = "status safe";
