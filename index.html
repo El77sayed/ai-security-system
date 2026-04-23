@@ -1,47 +1,118 @@
-<!DOCTYPE html>
+<!<!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Security System</title>
+<title>AI Security Pro</title>
 
 <style>
 body {
-    text-align: center;
-    background: #111;
+    margin: 0;
+    background: #0a0a0a;
     color: white;
     font-family: Arial;
+    text-align: center;
 }
 
-video {
-    border: 2px solid green;
-    margin-top: 10px;
+.header {
+    padding: 15px;
+    background: #111;
+    font-size: 22px;
+    font-weight: bold;
+    color: #00ff88;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    position: relative;
+}
+
+video, canvas {
+    border: 2px solid #00ff88;
+    border-radius: 10px;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 button {
-    padding: 10px 20px;
-    font-size: 18px;
     margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background: #00ff88;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>نظام مراقبة بسيط</h1>
+<div class="header">🛡 AI Security System Pro</div>
 
-<button id="start">تشغيل الكاميرا</button>
+<button id="startBtn">تشغيل الكاميرا</button>
 
-<br>
-
-<video id="video" width="300" height="200" autoplay></video>
+<div class="container">
+    <video id="video" width="400" height="300" autoplay></video>
+    <canvas id="canvas" width="400" height="300"></canvas>
+</div>
 
 <script>
 let video = document.getElementById("video");
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
 
-document.getElementById("start").onclick = async () => {
+let prevFrame = null;
+
+// تشغيل الكاميرا
+document.getElementById("startBtn").onclick = async () => {
     let stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
+    detectMotion();
 };
+
+// كشف الحركة + رسم بوكس
+function detectMotion() {
+    setInterval(() => {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        let frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+        if (prevFrame) {
+            let diff = 0;
+
+            for (let i = 0; i < frame.data.length; i += 4) {
+                let r = Math.abs(frame.data[i] - prevFrame.data[i]);
+                let g = Math.abs(frame.data[i+1] - prevFrame.data[i+1]);
+                let b = Math.abs(frame.data[i+2] - prevFrame.data[i+2]);
+
+                if (r + g + b > 60) diff++;
+            }
+
+            if (diff > 5000) {
+                drawBox();
+            }
+        }
+
+        prevFrame = frame;
+    }, 200);
+}
+
+// رسم بوكس احترافي
+function drawBox() {
+    ctx.strokeStyle = "#ff0000";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(50, 50, 300, 200);
+
+    ctx.fillStyle = "red";
+    ctx.font = "18px Arial";
+    ctx.fillText("⚠ Motion Detected", 60, 40);
+}
 </script>
 
 </body>
