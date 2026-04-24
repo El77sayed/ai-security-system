@@ -163,7 +163,7 @@ let logs = document.getElementById("logs");
 let model;
 let running = false;
 
-let lastBeepTime = 0;
+let alarmPlaying = false;
 let lastCaptureTime = 0;
 
 // 📜 log system
@@ -175,13 +175,8 @@ function addLog(text){
     lastEvent.innerText = text;
 }
 
-// 🔊 sound
+// 🔊 sound (continuous but controlled)
 function playBeep(){
-    let now = Date.now();
-    if(now - lastBeepTime < 1500) return;
-
-    lastBeepTime = now;
-
     let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let osc = audioCtx.createOscillator();
     let gain = audioCtx.createGain();
@@ -265,6 +260,7 @@ function stopSystem(){
 
 // 🧠 detect
 async function detect(){
+
     setInterval(async ()=>{
 
         if(!running) return;
@@ -292,11 +288,16 @@ async function detect(){
 
         peopleCount.innerText = count;
 
+        // 🔥 الصوت الذكي (تشغيل عند الظهور وإيقاف عند الاختفاء)
         if(count > 0){
             status.innerText = "INTRUDER DETECTED";
             status.className = "status danger";
 
-            playBeep();
+            if(!alarmPlaying){
+                playBeep();
+                alarmPlaying = true;
+            }
+
             addLog("Intruder detected 🚨");
 
             captureImage();
@@ -304,6 +305,8 @@ async function detect(){
         } else {
             status.innerText = "SYSTEM STATUS: SAFE";
             status.className = "status safe";
+
+            alarmPlaying = false;
         }
 
     }, 500);
