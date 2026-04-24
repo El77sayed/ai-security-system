@@ -102,14 +102,19 @@ button:hover{
     color:white;
 }
 
+/* 📊 DASHBOARD */
+.dashboard{
+    margin-top:15px;
+    padding:10px;
+    background:rgba(0,0,0,0.4);
+    border-radius:10px;
+    font-size:14px;
+}
+
 #logBox{
     margin-top:10px;
-    max-height:150px;
+    max-height:120px;
     overflow:auto;
-    font-size:12px;
-    background:rgba(0,0,0,0.4);
-    padding:10px;
-    border-radius:10px;
 }
 </style>
 
@@ -132,7 +137,16 @@ button:hover{
     <button class="dangerBtn" onclick="stopSystem()">STOP SYSTEM</button>
 </div>
 
-<div id="logBox"><b>EVENT LOG:</b></div>
+<!-- 📊 DASHBOARD -->
+<div class="dashboard">
+    <div>👥 Persons Detected: <span id="peopleCount">0</span></div>
+    <div>📸 Last Event: <span id="lastEvent">None</span></div>
+
+    <div id="logBox">
+        <b>EVENT LOG:</b>
+        <div id="logs"></div>
+    </div>
+</div>
 
 </div>
 
@@ -140,8 +154,11 @@ button:hover{
 let video = document.getElementById('video');
 let canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
+
 let status = document.getElementById('status');
-let logBox = document.getElementById("logBox");
+let peopleCount = document.getElementById('peopleCount');
+let lastEvent = document.getElementById('lastEvent');
+let logs = document.getElementById("logs");
 
 let model;
 let running = false;
@@ -154,11 +171,11 @@ function addLog(text){
     let time = new Date().toLocaleTimeString();
     let div = document.createElement("div");
     div.innerText = `${time} - ${text}`;
-    logBox.appendChild(div);
-    logBox.scrollTop = logBox.scrollHeight;
+    logs.appendChild(div);
+    lastEvent.innerText = text;
 }
 
-// 🔊 beep sound
+// 🔊 sound
 function playBeep(){
     let now = Date.now();
     if(now - lastBeepTime < 1500) return;
@@ -180,11 +197,10 @@ function playBeep(){
     setTimeout(()=> osc.stop(), 200);
 }
 
-// 📸 capture image (FIXED)
+// 📸 capture image
 function captureImage(){
-
     let now = Date.now();
-    if(now - lastCaptureTime < 5000) return; // منع التكرار
+    if(now - lastCaptureTime < 5000) return;
     lastCaptureTime = now;
 
     let tempCanvas = document.createElement("canvas");
@@ -242,10 +258,12 @@ function stopSystem(){
     status.innerText = "SYSTEM STATUS: STOPPED";
     status.className = "status safe";
 
+    peopleCount.innerText = "0";
+
     addLog("System stopped 🛑");
 }
 
-// 🧠 detection loop
+// 🧠 detect
 async function detect(){
     setInterval(async ()=>{
 
@@ -256,12 +274,12 @@ async function detect(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-        let personFound = false;
+        let count = 0;
 
         predictions.forEach(p => {
 
             if(p.class === "person" && p.score > 0.6){
-                personFound = true;
+                count++;
 
                 ctx.strokeStyle = "red";
                 ctx.lineWidth = 3;
@@ -272,7 +290,9 @@ async function detect(){
             }
         });
 
-        if(personFound){
+        peopleCount.innerText = count;
+
+        if(count > 0){
             status.innerText = "INTRUDER DETECTED";
             status.className = "status danger";
 
