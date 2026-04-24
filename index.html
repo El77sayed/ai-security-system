@@ -1,5 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Security System</title>
+
+<style>
+body {
+    background: black;
+    color: white;
+    text-align: center;
+    font-family: Arial;
+}
+
+video, canvas {
+    width: 640px;
+    height: 480px;
+    border: 2px solid white;
+}
+
+.status {
+    margin-top: 10px;
+    font-size: 20px;
+}
+
+.safe { color: green; }
+.danger { color: red; }
+</style>
+</head>
+
+<body>
+
+<h1>AI Security System</h1>
+
+<video id="video" autoplay muted></video>
+<canvas id="canvas"></canvas>
+
+<br><br>
+
+<button onclick="startSystem()">Start</button>
+<button onclick="stopSystem()">Stop</button>
+
+<div id="status" class="status safe">SYSTEM STATUS: SAFE</div>
+<h2>People Count: <span id="peopleCount">0</span></h2>
+
+<audio id="alarm" src="alarm.mp3"></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
 <script>
-// 🛑 stop system
+let video = document.getElementById("video");
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+let status = document.getElementById("status");
+let peopleCount = document.getElementById("peopleCount");
+let alarm = document.getElementById("alarm");
+
+let model;
+let running = false;
+
+cocoSsd.load().then(m => {
+    model = m;
+});
+
+// تشغيل
+function startSystem(){
+    running = true;
+
+    navigator.mediaDevices.getUserMedia({ video:true })
+    .then(stream => {
+        video.srcObject = stream;
+
+        video.onloadedmetadata = () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            detect();
+        };
+    });
+}
+
+// إيقاف
 function stopSystem(){
     running = false;
 
@@ -14,11 +94,14 @@ function stopSystem(){
     status.className = "status safe";
 
     peopleCount.innerText = "0";
-
-    addLog("System stopped 🛑");
 }
 
-// 🧠 detect
+// صوت
+function playBeep(){
+    alarm.play();
+}
+
+// كشف
 async function detect(){
     setInterval(async ()=>{
 
@@ -52,10 +135,6 @@ async function detect(){
             status.className = "status danger";
 
             playBeep();
-            addLog("Intruder detected 🚨");
-
-            captureImage();
-
         } else {
             status.innerText = "SYSTEM STATUS: SAFE";
             status.className = "status safe";
@@ -64,3 +143,6 @@ async function detect(){
     }, 500);
 }
 </script>
+
+</body>
+</html>
