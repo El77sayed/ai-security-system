@@ -1,235 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI Security System PRO</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+<meta charset="UTF-8">
+<title>AI Security System</title>
 
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family: Arial, sans-serif;
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma;
+    background: #0f172a;
+    color: #fff;
+    text-align: center;
 }
 
-body{
-    background: radial-gradient(circle at top, #0f172a, #000);
-    color:white;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+h1 {
+    margin-top: 20px;
+    color: #38bdf8;
 }
 
-.container{
-    width:95%;
-    max-width:950px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius:20px;
-    padding:20px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 40px rgba(0,255,255,0.25);
+.container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }
 
-h1{
-    text-align:center;
-    margin-bottom:15px;
-    color:#00f7ff;
-    letter-spacing:3px;
+.video-box {
+    position: relative;
+    border: 2px solid #38bdf8;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 0 25px #38bdf8;
 }
 
-.videoBox{
-    position:relative;
-    width:100%;
+video, canvas {
+    width: 640px;
+    height: 480px;
 }
 
-video{
-    width:100%;
-    border-radius:15px;
-    border:2px solid #00f7ff;
-    box-shadow: 0 0 25px #00f7ff;
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
-canvas{
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
+.controls {
+    margin-top: 20px;
 }
 
-.status{
-    margin-top:15px;
-    text-align:center;
-    font-size:20px;
-    padding:10px;
-    border-radius:10px;
-    background: rgba(0,0,0,0.5);
+button {
+    padding: 12px 25px;
+    margin: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-.safe{ color:#00ff88; }
-.danger{ color:#ff004c; animation: blink 0.4s infinite alternate; }
-
-@keyframes blink{
-    from{opacity:1;}
-    to{opacity:0.3;}
+.start {
+    background: #22c55e;
+    color: white;
 }
 
-button{
-    margin-top:10px;
-    padding:12px;
-    width:48%;
-    border:none;
-    border-radius:10px;
-    background:#00f7ff;
-    color:black;
-    font-weight:bold;
-    cursor:pointer;
-    transition:0.3s;
+.stop {
+    background: #ef4444;
+    color: white;
 }
 
-button:hover{
-    transform:scale(1.05);
+button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px white;
 }
 
-.dangerBtn{
-    background:#ff004c;
-    color:white;
+.status {
+    margin-top: 15px;
+    padding: 10px;
+    font-weight: bold;
+    border-radius: 10px;
+    display: inline-block;
 }
 
-/* 📊 DASHBOARD */
-.dashboard{
-    margin-top:15px;
-    padding:10px;
-    background:rgba(0,0,0,0.4);
-    border-radius:10px;
-    font-size:14px;
+.safe {
+    background: #16a34a;
 }
 
-#logBox{
-    margin-top:10px;
-    max-height:120px;
-    overflow:auto;
+.danger {
+    background: #dc2626;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+.info-panel {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.card {
+    background: #1e293b;
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px #000;
+}
+
+.log {
+    margin: 20px auto;
+    width: 70%;
+    height: 120px;
+    overflow-y: auto;
+    background: #020617;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
 }
 </style>
-
 </head>
+
 <body>
 
+<h1>🤖 AI Security System</h1>
+
 <div class="container">
-
-<h1>AI SECURITY SYSTEM PRO</h1>
-
-<div class="videoBox">
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
-</div>
-
-<div id="status" class="status safe">SYSTEM STATUS: READY</div>
-
-<div style="display:flex; gap:10px;">
-    <button onclick="startSystem()">START SYSTEM</button>
-    <button class="dangerBtn" onclick="stopSystem()">STOP SYSTEM</button>
-</div>
-
-<!-- 📊 DASHBOARD -->
-<div class="dashboard">
-    <div>👥 Persons Detected: <span id="peopleCount">0</span></div>
-    <div>📸 Last Event: <span id="lastEvent">None</span></div>
-
-    <div id="logBox">
-        <b>EVENT LOG:</b>
-        <div id="logs"></div>
+    <div class="video-box">
+        <video id="video" autoplay muted></video>
+        <canvas id="canvas"></canvas>
     </div>
 </div>
 
+<div class="controls">
+    <button class="start" onclick="startSystem()">Start System</button>
+    <button class="stop" onclick="stopSystem()">Stop System</button>
 </div>
 
-<script>
-let video = document.getElementById('video');
-let canvas = document.getElementById('canvas');
-let ctx = canvas.getContext('2d');
+<div id="status" class="status safe">SYSTEM STATUS: SAFE</div>
 
-let status = document.getElementById('status');
-let peopleCount = document.getElementById('peopleCount');
-let lastEvent = document.getElementById('lastEvent');
-let logs = document.getElementById("logs");
+<div class="info-panel">
+    <div class="card">
+        👥 People Count  
+        <h2 id="peopleCount">0</h2>
+    </div>
+</div>
+
+<div class="log" id="log"></div>
+
+<audio id="alarm" src="alarm.mp3"></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+<script>
+let video = document.getElementById("video");
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+let status = document.getElementById("status");
+let peopleCount = document.getElementById("peopleCount");
+let logBox = document.getElementById("log");
+let alarm = document.getElementById("alarm");
 
 let model;
 let running = false;
+let alarmPlaying = false;
+let lastCapture = 0;
 
-let lastBeepTime = 0;
-let lastCaptureTime = 0;
+// تحميل الموديل
+cocoSsd.load().then(m => {
+    model = m;
+    addLog("AI Model Loaded ✅");
+});
 
-// 📜 log system
-function addLog(text){
+function addLog(msg){
     let time = new Date().toLocaleTimeString();
-    let div = document.createElement("div");
-    div.innerText = `${time} - ${text}`;
-    logs.appendChild(div);
-    lastEvent.innerText = text;
+    logBox.innerHTML += `[${time}] ${msg}<br>`;
+    logBox.scrollTop = logBox.scrollHeight;
 }
 
-// 🔊 sound
-function playBeep(){
-    let now = Date.now();
-    if(now - lastBeepTime < 1500) return;
-
-    lastBeepTime = now;
-
-    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let osc = audioCtx.createOscillator();
-    let gain = audioCtx.createGain();
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    osc.type = "square";
-    osc.frequency.value = 800;
-    gain.gain.value = 0.15;
-
-    osc.start();
-    setTimeout(()=> osc.stop(), 200);
-}
-
-// 📸 capture image
-function captureImage(){
-    let now = Date.now();
-    if(now - lastCaptureTime < 5000) return;
-    lastCaptureTime = now;
-
-    let tempCanvas = document.createElement("canvas");
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-
-    let tempCtx = tempCanvas.getContext("2d");
-    tempCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    let img = tempCanvas.toDataURL("image/png");
-
-    let a = document.createElement("a");
-    a.href = img;
-    a.download = "intruder.png";
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    addLog("Photo captured 📸");
-}
-
-// 🚀 start system
-async function startSystem(){
-    if(running) return;
+// تشغيل النظام
+function startSystem(){
     running = true;
-
-    model = await cocoSsd.load();
-    addLog("AI Model Loaded");
 
     navigator.mediaDevices.getUserMedia({ video:true })
     .then(stream => {
@@ -238,13 +192,14 @@ async function startSystem(){
         video.onloadedmetadata = () => {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-
             detect();
         };
     });
+
+    addLog("System started ▶️");
 }
 
-// 🛑 stop system
+// إيقاف النظام
 function stopSystem(){
     running = false;
 
@@ -263,50 +218,69 @@ function stopSystem(){
     addLog("System stopped 🛑");
 }
 
-// 🧠 detect
+// صوت الإنذار
+function playBeep(){
+    alarm.play();
+}
+
+// تصوير
+function captureImage(){
+    let img = canvas.toDataURL("image/png");
+    addLog("Snapshot Captured 📸");
+}
+
+// الكشف
 async function detect(){
-    setInterval(async ()=>{
 
-        if(!running) return;
+    if(!running) return;
 
-        const predictions = await model.detect(video);
+    const predictions = await model.detect(video);
 
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-        let count = 0;
+    let count = 0;
 
-        predictions.forEach(p => {
+    predictions.forEach(p => {
+        if(p.class === "person" && p.score > 0.6){
+            count++;
 
-            if(p.class === "person" && p.score > 0.6){
-                count++;
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(...p.bbox);
 
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(...p.bbox);
+            ctx.fillStyle = "red";
+            ctx.fillText("INTRUDER", p.bbox[0], p.bbox[1] - 5);
+        }
+    });
 
-                ctx.fillStyle = "red";
-                ctx.fillText("INTRUDER", p.bbox[0], p.bbox[1] - 5);
-            }
-        });
+    peopleCount.innerText = count;
 
-        peopleCount.innerText = count;
+    if(count > 0){
 
-        if(count > 0){
-            status.innerText = "INTRUDER DETECTED";
-            status.className = "status danger";
+        status.innerText = "INTRUDER DETECTED";
+        status.className = "status danger";
 
+        if(!alarmPlaying){
             playBeep();
-            addLog("Intruder detected 🚨");
-
-            captureImage();
-
-        } else {
-            status.innerText = "SYSTEM STATUS: SAFE";
-            status.className = "status safe";
+            alarmPlaying = true;
         }
 
-    }, 500);
+        let now = Date.now();
+        if(now - lastCapture > 3000){
+            captureImage();
+            lastCapture = now;
+        }
+
+        addLog("Intruder detected 🚨");
+
+    } else {
+        status.innerText = "SYSTEM STATUS: SAFE";
+        status.className = "status safe";
+        alarmPlaying = false;
+    }
+
+    requestAnimationFrame(detect);
 }
 </script>
 
