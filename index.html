@@ -137,7 +137,6 @@ button:hover{
     <button class="dangerBtn" onclick="stopSystem()">STOP SYSTEM</button>
 </div>
 
-<!-- 📊 DASHBOARD -->
 <div class="dashboard">
     <div>👥 Persons Detected: <span id="peopleCount">0</span></div>
     <div>📸 Last Event: <span id="lastEvent">None</span></div>
@@ -163,10 +162,12 @@ let logs = document.getElementById("logs");
 let model;
 let running = false;
 
-let alarmPlaying = false;
+let alarmOsc = null;
+let audioCtx = null;
+
 let lastCaptureTime = 0;
 
-// 📜 log system
+// 📜 log
 function addLog(text){
     let time = new Date().toLocaleTimeString();
     let div = document.createElement("div");
@@ -175,24 +176,36 @@ function addLog(text){
     lastEvent.innerText = text;
 }
 
-// 🔊 sound (continuous but controlled)
-function playBeep(){
-    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let osc = audioCtx.createOscillator();
+// 🔊 START ALARM (continuous)
+function startAlarm(){
+    if(alarmOsc) return;
+
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    alarmOsc = audioCtx.createOscillator();
     let gain = audioCtx.createGain();
 
-    osc.connect(gain);
+    alarmOsc.connect(gain);
     gain.connect(audioCtx.destination);
 
-    osc.type = "square";
-    osc.frequency.value = 800;
-    gain.gain.value = 0.15;
+    alarmOsc.type = "sawtooth";
+    alarmOsc.frequency.value = 900;
 
-    osc.start();
-    setTimeout(()=> osc.stop(), 200);
+    gain.gain.value = 0.2;
+
+    alarmOsc.start();
 }
 
-// 📸 capture image
+// 🔇 STOP ALARM
+function stopAlarm(){
+    if(alarmOsc){
+        alarmOsc.stop();
+        alarmOsc.disconnect();
+        alarmOsc = null;
+    }
+}
+
+// 📸 capture
 function captureImage(){
     let now = Date.now();
     if(now - lastCaptureTime < 5000) return;
@@ -218,7 +231,7 @@ function captureImage(){
     addLog("Photo captured 📸");
 }
 
-// 🚀 start system
+// 🚀 start
 async function startSystem(){
     if(running) return;
     running = true;
@@ -239,7 +252,7 @@ async function startSystem(){
     });
 }
 
-// 🛑 stop system
+// 🛑 stop
 function stopSystem(){
     running = false;
 
@@ -254,6 +267,8 @@ function stopSystem(){
     status.className = "status safe";
 
     peopleCount.innerText = "0";
+
+    stopAlarm();
 
     addLog("System stopped 🛑");
 }
@@ -288,15 +303,11 @@ async function detect(){
 
         peopleCount.innerText = count;
 
-        // 🔥 الصوت الذكي (تشغيل عند الظهور وإيقاف عند الاختفاء)
         if(count > 0){
             status.innerText = "INTRUDER DETECTED";
             status.className = "status danger";
 
-            if(!alarmPlaying){
-                playBeep();
-                alarmPlaying = true;
-            }
+            startAlarm();
 
             addLog("Intruder detected 🚨");
 
@@ -306,7 +317,7 @@ async function detect(){
             status.innerText = "SYSTEM STATUS: SAFE";
             status.className = "status safe";
 
-            alarmPlaying = false;
+            stopAlarm();
         }
 
     }, 500);
