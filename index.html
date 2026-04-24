@@ -2,200 +2,228 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AI Security Control Room</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Security System PRO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
 <style>
-body{
+*{
     margin:0;
-    font-family:Arial;
-    background:#050b18;
+    padding:0;
+    box-sizing:border-box;
+    font-family: Arial, sans-serif;
+}
+
+body{
+    background: radial-gradient(circle at top, #0f172a, #000);
     color:white;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
-/* 🔷 TOP BAR */
-.header{
-    text-align:center;
-    padding:15px;
-    font-size:22px;
-    color:#00e5ff;
-    letter-spacing:3px;
-    border-bottom:1px solid #0ff2;
-}
-
-/* 🔷 MAIN LAYOUT */
 .container{
-    display:grid;
-    grid-template-columns: 2fr 1fr;
-    gap:15px;
-    padding:15px;
+    width:95%;
+    max-width:950px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(0,255,255,0.25);
 }
 
-/* 🎥 VIDEO PANEL */
+h1{
+    text-align:center;
+    margin-bottom:15px;
+    color:#00f7ff;
+    letter-spacing:3px;
+}
+
 .videoBox{
     position:relative;
-    border:2px solid #00e5ff;
-    border-radius:10px;
-    overflow:hidden;
-    box-shadow:0 0 20px #00e5ff55;
+    width:100%;
 }
 
 video{
     width:100%;
+    border-radius:15px;
+    border:2px solid #00f7ff;
+    box-shadow: 0 0 25px #00f7ff;
 }
 
 canvas{
     position:absolute;
     top:0;
     left:0;
-}
-
-/* 📊 SIDE PANEL */
-.panel{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-}
-
-/* CARDS */
-.card{
-    background:#0b1224;
-    border:1px solid #00e5ff33;
-    padding:10px;
-    border-radius:10px;
+    width:100%;
+    height:100%;
 }
 
 .status{
-    padding:10px;
+    margin-top:15px;
     text-align:center;
-    border-radius:8px;
-    font-weight:bold;
+    font-size:20px;
+    padding:10px;
+    border-radius:10px;
+    background: rgba(0,0,0,0.5);
 }
 
-.safe{
-    background:#00c85333;
-    color:#00e676;
-}
+.safe{ color:#00ff88; }
+.danger{ color:#ff004c; animation: blink 0.4s infinite alternate; }
 
-.danger{
-    background:#ff174433;
-    color:#ff1744;
-}
-
-/* BUTTONS */
-.buttons{
-    display:flex;
-    gap:10px;
+@keyframes blink{
+    from{opacity:1;}
+    to{opacity:0.3;}
 }
 
 button{
-    flex:1;
-    padding:10px;
+    margin-top:10px;
+    padding:12px;
+    width:48%;
     border:none;
-    border-radius:8px;
-    cursor:pointer;
+    border-radius:10px;
+    background:#00f7ff;
+    color:black;
     font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
 }
 
-.start{ background:#00e676; }
-.stop{ background:#ff1744; }
+button:hover{
+    transform:scale(1.05);
+}
 
-/* LOGS */
-.logs{
-    height:200px;
+.dangerBtn{
+    background:#ff004c;
+    color:white;
+}
+
+/* 📊 DASHBOARD */
+.dashboard{
+    margin-top:15px;
+    padding:10px;
+    background:rgba(0,0,0,0.4);
+    border-radius:10px;
+    font-size:14px;
+}
+
+#logBox{
+    margin-top:10px;
+    max-height:120px;
     overflow:auto;
-    font-size:12px;
 }
 </style>
+
 </head>
-
 <body>
-
-<div class="header">AI SECURITY CONTROL ROOM</div>
 
 <div class="container">
 
-<!-- LEFT CAMERA -->
+<h1>AI SECURITY SYSTEM PRO</h1>
+
 <div class="videoBox">
-    <video id="video" autoplay muted playsinline></video>
+    <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
 </div>
 
-<!-- RIGHT DASHBOARD -->
-<div class="panel">
+<div id="status" class="status safe">SYSTEM STATUS: READY</div>
 
-    <div id="status" class="status safe">SYSTEM READY</div>
-
-    <div class="card">
-        👥 People: <span id="peopleCount">0</span>
-    </div>
-
-    <div class="card">
-        📸 Last Event: <span id="lastEvent">None</span>
-    </div>
-
-    <div class="buttons">
-        <button class="start" onclick="startSystem()">START</button>
-        <button class="stop" onclick="stopSystem()">STOP</button>
-    </div>
-
-    <div class="card logs" id="logs"></div>
-
+<div style="display:flex; gap:10px;">
+    <button onclick="startSystem()">START SYSTEM</button>
+    <button class="dangerBtn" onclick="stopSystem()">STOP SYSTEM</button>
 </div>
+
+<!-- 📊 DASHBOARD -->
+<div class="dashboard">
+    <div>👥 Persons Detected: <span id="peopleCount">0</span></div>
+    <div>📸 Last Event: <span id="lastEvent">None</span></div>
+
+    <div id="logBox">
+        <b>EVENT LOG:</b>
+        <div id="logs"></div>
+    </div>
+</div>
+
 </div>
 
 <script>
-let video = document.getElementById("video");
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let ctx = canvas.getContext('2d');
 
-let status = document.getElementById("status");
-let peopleCount = document.getElementById("peopleCount");
-let lastEvent = document.getElementById("lastEvent");
+let status = document.getElementById('status');
+let peopleCount = document.getElementById('peopleCount');
+let lastEvent = document.getElementById('lastEvent');
 let logs = document.getElementById("logs");
 
 let model;
 let running = false;
 
-let alarmOsc = null;
-let audioCtx = null;
+let lastBeepTime = 0;
+let lastCaptureTime = 0;
 
-/* LOG */
-function addLog(msg){
+// 📜 log system
+function addLog(text){
     let time = new Date().toLocaleTimeString();
-    logs.innerHTML += `<div>[${time}] ${msg}</div>`;
-    logs.scrollTop = logs.scrollHeight;
+    let div = document.createElement("div");
+    div.innerText = `${time} - ${text}`;
+    logs.appendChild(div);
+    lastEvent.innerText = text;
 }
 
-/* 🔊 ALARM */
-function startAlarm(){
-    if(alarmOsc) return;
+// 🔊 sound
+function playBeep(){
+    let now = Date.now();
+    if(now - lastBeepTime < 1500) return;
 
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    alarmOsc = audioCtx.createOscillator();
+    lastBeepTime = now;
+
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let osc = audioCtx.createOscillator();
     let gain = audioCtx.createGain();
 
-    alarmOsc.connect(gain);
+    osc.connect(gain);
     gain.connect(audioCtx.destination);
 
-    alarmOsc.type = "sawtooth";
-    alarmOsc.frequency.value = 900;
-    gain.gain.value = 0.2;
+    osc.type = "square";
+    osc.frequency.value = 800;
+    gain.gain.value = 0.15;
 
-    alarmOsc.start();
+    osc.start();
+    setTimeout(()=> osc.stop(), 200);
 }
 
-function stopAlarm(){
-    if(alarmOsc){
-        alarmOsc.stop();
-        alarmOsc = null;
-    }
+// 📸 capture image
+function captureImage(){
+    let now = Date.now();
+    if(now - lastCaptureTime < 5000) return;
+    lastCaptureTime = now;
+
+    let tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+
+    let tempCtx = tempCanvas.getContext("2d");
+    tempCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    let img = tempCanvas.toDataURL("image/png");
+
+    let a = document.createElement("a");
+    a.href = img;
+    a.download = "intruder.png";
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    addLog("Photo captured 📸");
 }
 
-/* START */
+// 🚀 start system
 async function startSystem(){
     if(running) return;
     running = true;
@@ -203,80 +231,82 @@ async function startSystem(){
     model = await cocoSsd.load();
     addLog("AI Model Loaded");
 
-    let stream = await navigator.mediaDevices.getUserMedia({video:true});
-    video.srcObject = stream;
+    navigator.mediaDevices.getUserMedia({ video:true })
+    .then(stream => {
+        video.srcObject = stream;
 
-    video.onloadedmetadata = () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        detect();
-    };
+        video.onloadedmetadata = () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            detect();
+        };
+    });
 }
 
-/* STOP */
+// 🛑 stop system
 function stopSystem(){
     running = false;
 
     let stream = video.srcObject;
     if(stream){
-        stream.getTracks().forEach(t=>t.stop());
+        stream.getTracks().forEach(track => track.stop());
     }
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    status.innerText = "SYSTEM STOPPED";
+    status.innerText = "SYSTEM STATUS: STOPPED";
     status.className = "status safe";
 
     peopleCount.innerText = "0";
 
-    stopAlarm();
-
-    addLog("System stopped");
+    addLog("System stopped 🛑");
 }
 
-/* DETECT */
+// 🧠 detect
 async function detect(){
-
     setInterval(async ()=>{
 
         if(!running) return;
 
-        let predictions = await model.detect(video);
+        const predictions = await model.detect(video);
 
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.drawImage(video,0,0);
+        ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
         let count = 0;
 
-        predictions.forEach(p=>{
-            if(p.class==="person" && p.score>0.6){
+        predictions.forEach(p => {
+
+            if(p.class === "person" && p.score > 0.6){
                 count++;
 
-                ctx.strokeStyle="red";
-                ctx.lineWidth=2;
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = 3;
                 ctx.strokeRect(...p.bbox);
+
+                ctx.fillStyle = "red";
+                ctx.fillText("INTRUDER", p.bbox[0], p.bbox[1] - 5);
             }
         });
 
         peopleCount.innerText = count;
 
-        if(count>0){
-            status.innerText="INTRUDER ALERT";
-            status.className="status danger";
+        if(count > 0){
+            status.innerText = "INTRUDER DETECTED";
+            status.className = "status danger";
 
-            startAlarm();
-
+            playBeep();
             addLog("Intruder detected 🚨");
-            lastEvent.innerText="Intruder";
 
-        }else{
-            status.innerText="SYSTEM SAFE";
-            status.className="status safe";
+            captureImage();
 
-            stopAlarm();
+        } else {
+            status.innerText = "SYSTEM STATUS: SAFE";
+            status.className = "status safe";
         }
 
-    },500);
+    }, 500);
 }
 </script>
 
